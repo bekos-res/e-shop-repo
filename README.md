@@ -43,5 +43,6 @@ Defines the build process:
 
 ### Steps:
 Build and run the project:
+````bash
 make
 ./eshop
