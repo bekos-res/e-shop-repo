@@ -6,7 +6,7 @@
 
 Product catalog[PRODUCT_COUNT];	// Define the catalog array
 
-void initialize_catalog() {
+void initialise_catalog() {
 	for (int i = 0; i < PRODUCT_COUNT; i++) {
 		snprintf(catalog[i].description, 50, "Product %d", i + 1);
 		catalog[i].price = (float)(10 + (rand() % 91));	// Random price between 10 and 100
