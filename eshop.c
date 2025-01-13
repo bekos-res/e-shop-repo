@@ -1,38 +1,37 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include "eshop.h"
-#include "utils.h"
 
-setup
+Product catalog[PRODUCT_COUNT];	// Define the catalog array
 
-void run_eshop(int to_eshop[][2], int from_eshop[][2], int num_customers) {
-	int catalog[NUM_PRODUCTS] = {2}; // Initialize inventory (2 items per product)
-
-	// Close unused ends of pipes in the parent process
-	for (int i = 0; i < num_customers; i++) {
-		close(to_eshop[i][1]); // Close the write end (parent only reads orders)
-		close(from_eshop[i][0]); // Close the read end (parent only writes responses)
+void initialize_catalog() {
+	for (int i = 0; i < PRODUCT_COUNT; i++) {
+		snprintf(catalog[i].description, 50, "Product %d", i + 1);
+		catalog[i].price = (float)(10 + (rand() % 91));	// Random price between 10 and 100
+		catalog[i].item_count = 2;	// Default: 2 items in stock
 	}
+}
 
-	while (1) { // Process orders in a loop
-		for (int i = 0; i < num_customers; i++) {
-			int order;
-			if (read(to_eshop[i][0], &order, sizeof(order)) > 0) {
-				// Order received from customer i
-				printf("E-Shop: Customer %d requested product %d\n", i, order);
+void process_customer_request(int request_pipe[2], int response_pipe[2]) {
+	close(request_pipe[1]);		// Close write end of request pipe
+	close(response_pipe[0]);        // Close read end of response pipe
 
-				// Check inventory
-				int response;
-				if (catalog[order] > 0) {
-					catalog[order]--; // Reduce stock	
-					response = 1;    // Success
-				} else {
-					response = 0;    // Out of stock
-				}
-				sleep(1); // Simulate processing delay
-				write(from_eshop[i][1], &response, sizeof(response)); // Send response
+	int product_index;
+	while (read(request_pipe[0], &product_index, sizeof(int)) > 0) {
+		if (product_index >= 0 && product_index < PRODUCT_COUNT) {
+			if (catalog[product_index].item_count > 0) {
+				catalog[product_index].item_count--;
+				float price = catalog[product_index].price;
+				write(response_pipe[1], &price, sizeof(float)); // Send success response
+			} else {
+				float unavailable = -1;
+				write(response_pipe[1], &unavailable, sizeof(float)); // Out of stock
 			}
 		}
 	}
+
+	close(request_pipe[0]);                      // Close read end of request pipe
+	close(response_pipe[1]);                     // Close write end of response pipe
 }

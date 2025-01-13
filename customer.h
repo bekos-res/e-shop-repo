@@ -1,6 +1,8 @@
 #ifndef CUSTOMER_H
-	#define CUSTOMER_H
+#define CUSTOMER_H
 
-	void run_customer(int id, int to_eshop[2], int from_eshop[2]);
+#define NUM_ORDERS 10
+
+void customer_process(int customer_id, int request_pipe[2], int response_pipe[2], int result_pipe[2]);
 
 #endif // CUSTOMER_H

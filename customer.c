@@ -1,27 +1,48 @@
-#include "customer.h"
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include "utils.h"
+#include <unistd.h>
+#include <time.h>
+#include "customer.h"
 
-void run_customer(int id, int to_eshop[2], int from_eshop[2]) {
-	// Close unused ends of pipes
-	close(to_eshop[0]);	// Close read end (since customer only writes orders)
-	close(from_eshop[1]);	// Close write end (since customer only reads responses)
+void customer_process(int customer_id, int request_pipe[2], int response_pipe[2], int result_pipe[2]) {
+	printf("Starting Customer #%d with PID %d and PPID %d.\n\n", customer_id + 1, getpid(), getppid());
 
-	for (int i = 0; i < 10; i++) {	// Send 10 orders
-		int order = rand() % NUM_PRODUCTS;	// Pick a random product
-		write(to_eshop[1], &order, sizeof(order));	// Send order to e-shop
-		printf("Customer %d: Ordered product %d\n", id, order);
 
-		int response;
-		read(from_eshop[0], &response, sizeof(response));	// Get response
-		printf("Customer %d: Received response %d\n", id, response);
+	close(request_pipe[0]);		// Close read end of request pipe
+	close(response_pipe[1]);	// Close write end of response pipe
+	close(result_pipe[0]);		// Close read end of result pipe (child writes results)
 
-		sleep(1);	// Wait before sending the next order
+
+	srand(time(NULL) ^ (getpid() << 16));		// Seed the random generator
+	
+	int successful_purchases = 0;
+	float total_spent = 0;
+
+	for (int i = 0; i < NUM_ORDERS; i++) {
+		int product_index = rand() % 20;	// Random product index
+		write(request_pipe[1], &product_index, sizeof(int));	// Send request
+
+		float response;
+		read(response_pipe[0], &response, sizeof(float));	// Read response
+
+		if (response == -1) {
+			printf("Customer #%d: Product %d is out of stock.\n", customer_id + 1, product_index);
+		} else {
+			successful_purchases++;
+			total_spent += response;
+			printf("Customer #%d: Bought Product %d for %.2f.\n", customer_id + 1, product_index, response);
+		}
+
+		sleep(1);	// Wait for 1 second
 	}
 
-	// Close pipes when done
-	close(to_eshop[1]);
-	close(from_eshop[0]);
+	printf("Customer spent a grand total of %.2f EUR on %d successful orders out of 10 made.\n\n\n", total_spent, successful_purchases);
+
+	// Send results back to the parent process
+	write(result_pipe[1], &successful_purchases, sizeof(int));
+	write(result_pipe[1], &total_spent, sizeof(float));
+
+	close(request_pipe[1]);		// Close write end of request pipe
+	close(response_pipe[0]);	// Close read end of response pipe
+	close(result_pipe[1]);		// Close write end of result pipe
 }

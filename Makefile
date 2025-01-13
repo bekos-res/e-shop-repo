@@ -1,19 +1,18 @@
-CC = gcc
-CFLAGS = -Wall -g
+CC		= gcc
+CFLAGS		= -Wall -O2
+LDFLAGS		=
+SOURCES		= main.c eshop.c customer.c
+HEADERS		= eshop.h customer.h
+OBJECTS		= $(SOURCES:.c=.o)
+EXEC		= eshop
 
-all: main
+all: $(EXEC)
 
-main: main.o eshop.o customer.o utils.o
-	$(CC) $(CFLAGS) -o main main.o eshop.o customer.o utils.o
+$(EXEC): $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LDFLAGS)
 
-main.o: main.c eshop.h customer.h utils.h
-	$(CC) $(CFLAGS) -c main.c
-
-eshop.o: eshop.c eshop.h utils.h
-	$(CC) $(CFLAGS) -c eshop.c
-
-customer.o: customer.c customer.h utils.h
-	$(CC) $(CFLAGS) -c customer.c
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f *.o main
+	rm -f $(OBJECTS) $(EXEC)
