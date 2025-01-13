@@ -7,7 +7,7 @@
 #define NUM_CUSTOMERS 5
 
 int main() {
-	initialize_catalog();
+	initialise_catalog();
 
 	int total_successful_purchases = 0;
 	float total_revenue = 0;
