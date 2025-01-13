@@ -12,7 +12,7 @@ typedef struct {
 extern Product catalog[PRODUCT_COUNT];	// Declare the catalog array
 
 // Function declarations
-void initialize_catalog();
+void initialise_catalog();
 void process_customer_request(int request_pipe[2], int response_pipe[2]);
 
 #endif // ESHOP_H
