@@ -1,62 +1,71 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
+#include <time.h>
 #include "eshop.h"
 #include "customer.h"
 
-#define NUM_CUSTOMERS 5
-
 int main() {
 	initialise_catalog();
-
-	int total_successful_purchases = 0;
-	float total_revenue = 0;
+	srand(time(NULL));
 
 	for (int i = 0; i < NUM_CUSTOMERS; i++) {
-		int request_pipe[2], response_pipe[2], result_pipe[2];
-		if (pipe(request_pipe) == -1 || pipe(response_pipe) == -1 || pipe(result_pipe) == -1) {
+		int request_pipe[2], response_pipe[2];	// Pipe declaration
+		if (pipe(request_pipe) == -1 || pipe(response_pipe) == -1) {	// Pipe check
 			perror("Pipe creation failed");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		pid_t pid = fork();
-		if (pid == 0) {                      // Child process
-			customer_process(i, request_pipe, response_pipe, result_pipe);
-			exit(0);
-		} else if (pid > 0) {                // Parent process
-			printf("Parent handles the e-shop with PID %d.\n\n", getpid());
-			
 
-			close(request_pipe[1]);		// Close write end of request pipe
-			close(response_pipe[0]);	// Close read end of response pipe
-			close(result_pipe[1]);		// Close write end of result pipe (parent reads results)
-			
-
-			process_customer_request(request_pipe, response_pipe);
-
-			int successful_purchases;
-			float total_spent;
-
-			// Read results from the child
-			read(result_pipe[0], &successful_purchases, sizeof(int));
-			read(result_pipe[0], &total_spent, sizeof(float));
-
-			// Update totals
-			total_successful_purchases += successful_purchases;
-			total_revenue += total_spent;
-
-
-			close(request_pipe[0]);		// Close read end of request pipe
-			close(response_pipe[1]);	// Close write end of response pipe
-			close(result_pipe[0]);		// Close read end of result pipe
-		} else {
+		if (pid == -1) {
 			perror("Fork failed");
-			exit(1);
+			exit(EXIT_FAILURE);
+		} else if (pid == 0) {  // Child process
+			customer_process(i, request_pipe, response_pipe);
+		} else {	// Parent process
+			printf("\n\nParent handles the e-shop with PID %d.\n", getpid());
+			process_customer_request(request_pipe, response_pipe);
 		}
 	}
 
-	printf("Out of %d orders made, %d were sucessful.\n", NUM_CUSTOMERS * NUM_ORDERS, total_successful_purchases);
-	printf("Grand total revenue: %.2f EUR\n", total_revenue);
+	for (int i = 0; i < NUM_CUSTOMERS; i++) {
+		wait(NULL);	// Wait for all children to exit
+	}
+	
+	int total_attempts = 0, total_success = 0;
+	float total_revenue = 0.0f;
+
+	// When all orders are completed, print the e-shop's general product report
+	printf("\n\n\n");
+	for (int i = 0; i < PRODUCT_COUNT; i++) {
+		sleep(1);
+		printf("\nProduct description: %s\n", catalog[i].description);
+		printf("\tAttempted orders:\t%d\n", catalog[i].attempt_count);
+		printf("\tNumber of sales:\t%d\n", catalog[i].sold_count);
+
+		if (catalog[i].attempt_count > catalog[i].sold_count) {	// If there were more attempts than sales, someone failed
+			printf("\tList of users who failed to buy \"%s\":\n", catalog[i].description);
+			for (int j = 0; j < NUM_CUSTOMERS; j++) {	// For each customer who could have ordered this product
+				int customer_fails = catalog[i].failed_customers[j];	// see how many times they failed to order it
+				if (customer_fails > 0)	// and if there is any number other than 0 (initial number)
+					printf("\t\tCustomer #%d was not serviced (%d times).\n", j, customer_fails);
+				// print out the customer's ID and amount of failed requests of this product
+			}
+		}
+
+		total_attempts += catalog[i].attempt_count;
+		total_success += catalog[i].sold_count;
+		total_revenue += catalog[i].sold_count * catalog[i].price;
+	}
+
+	// General e-shop order report at the end
+	printf("\n\n\n");
+	printf("\nSummary:\n");
+	printf("\tTotal Attempts: %d\n", total_attempts);
+	printf("\tTotal Successful Purchases: %d\n", total_success);
+	printf("\tTotal Revenue: %.2f\n", total_revenue);
 
 	return 0;
 }

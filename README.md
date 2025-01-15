@@ -1,48 +1,67 @@
-# e-shop-repo
+# E-Shop Project
 
-This project simulates an e-shop with multiple customers interacting concurrently with a shared product catalog. It demonstrates inter-process communication (IPC) in a multi-process environment using pipes. The e-shop manages a catalog of products, and customers place orders for items.
+This project implements a simulated e-shop system to demonstrate **Inter-Process Communication (IPC)** using **anonymous pipes** in a multi-process environment. The e-shop allows customers to place orders for products, processes these orders in real-time, and generates a detailed report summarising the activity.
 
 ## Features
 
-1. **Product Catalog**: The e-shop maintains a catalog of 20 products, each with a description, price, and stock count.
-2. **Customer Simulation**: Up to 5 customers (configurable) interact with the e-shop, placing 10 random orders each.
-3. **Order Processing**: The e-shop processes each customer's requests in real-time, updating the stock count and responding to availability and pricing.
-4. **Inter-Process Communication**: Uses pipes for communication between the parent process (e-shop) and child processes (customers).
-5. **Concurrency**: Customers operate as separate processes, simulating a real-world e-commerce environment with multiple users.
+1. **Product Catalog**:
+   - The e-shop maintains a catalog of 20 products.
+   - Each product is defined by:
+     - A description
+     - Price
+     - Stock count (initially set to 2 units per product).
+
+2. **Customer Simulation**:
+   - Up to 5 customers interact with the e-shop concurrently.
+   - Each customer places 10 product orders at 1-second intervals.
+
+3. **Order Processing**:
+   - The e-shop processes orders sequentially, taking 1 second per order.
+   - Successful purchases deduct from the stock; unsuccessful attempts notify the customer.
+
+4. **Inter-Process Communication**:
+   - Communication between the e-shop (parent process) and customers (child processes) is handled using **anonymous pipes**.
+   - Two pipes are used per customer for bidirectional communication.
+
+5. **Summary Report**:
+   - After all orders are processed, the e-shop generates a report containing:
+     - Product sales statistics.
+     - Unserved customers (if any).
+     - Total orders, successful and failed transactions, and overall revenue.
 
 ## Components
 
 ### 1. `customer.c` / `customer.h`
-Handles the customer simulation:
-- Each customer makes 10 random product requests.
-- If the product is available, the customer completes the purchase and the stock is updated.
-- Customers send results (successful purchases and total amount spent) back to the e-shop.
+Defines the behavior of customer processes:
+- Simulates order requests with random product selections.
+- Sends order data to the e-shop and receives results.
+- Handles purchase success or failure notifications.
 
 ### 2. `eshop.c` / `eshop.h`
-Manages the e-shop:
-- Initialises the product catalog with random prices and a default stock of 2 items each.
-- Processes customer requests and updates stock availability.
-- Responds to customers with pricing information or an out-of-stock message.
+Implements the e-shop logic:
+- Maintains and manages the product catalog.
+- Processes customer orders, updating stock levels.
+- Sends responses (success/failure) back to customers.
 
 ### 3. `main.c`
-Orchestrates the simulation:
-- Spawns child processes for each customer.
-- Handles pipes for communication between the e-shop and customers.
-- Aggregates and displays results, including total successful purchases and revenue.
+Coordinates the simulation:
+- Initialises the e-shop and product catalog.
+- Spawns customer processes and sets up communication pipes.
+- Collects results and produces a summary report.
 
 ### 4. `Makefile`
-Defines the build process:
-- Compiles the project using GCC.
-- Includes `all` and `clean` targets for building and cleaning the project files.
+Automates the build process:
+- Compiles all components using GCC.
+- Provides `make all` and `make clean` targets.
 
 ## How to Build and Run
 
 ### Prerequisites
-- GCC compiler
-- Unix-like operating system (Linux, macOS)
+- A Unix-like operating system (Linux, macOS).
+- GCC or compatible C compiler.
 
-### Steps:
-Build and run the project:
-````bash
-make
-./eshop
+### Steps
+1. Clone the repository:
+   ```bash
+   git clone <repository_url>
+   cd <repository_directory>
