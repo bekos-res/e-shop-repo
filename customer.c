@@ -12,6 +12,9 @@ void customer_process(int customer_id, int request_pipe[2], int response_pipe[2]
 
 	srand(time(NULL) ^ (getpid() << 16));		// Seed the random generator
 	
+	float total_spent = 0.0;
+	int success_counter = 0;
+	
 	for (int i = 0; i < NUM_ORDERS; i++) {
 		int product_index = rand() % PRODUCT_COUNT;	// Random product index
 		write(request_pipe[1], &product_index, sizeof(int));	// Send product order
@@ -26,11 +29,15 @@ void customer_process(int customer_id, int request_pipe[2], int response_pipe[2]
 			// If price is negative, order was not possible
 			printf("Customer #%d: %s is out of stock.\n", customer_id + 1, description);
 		} else {
-			printf("Customer #%d: Bought %s for %.2f.\n", customer_id + 1, description, price);
+			printf("Customer #%d: Bought %s for %.2f EUR.\n", customer_id + 1, description, price);
+			total_spent += price;
+			success_counter++;
 		}
 
 		sleep(1);	// Wait for 1 second
 	}
+
+	printf("Customer #%d: Total spent on %d successful orders (out of %d orders): %.2f EUR.\n", customer_id + 1, success_counter, NUM_ORDERS, total_spent);
 
 	close(request_pipe[1]);		// Close write end of request pipe
 	close(response_pipe[0]);	// Close read end of response pipe

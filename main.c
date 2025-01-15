@@ -61,11 +61,11 @@ int main() {
 	}
 
 	// General e-shop order report at the end
-	printf("\n\n\n");
+	printf("\n\n");
 	printf("\nSummary:\n");
 	printf("\tTotal Attempts: %d\n", total_attempts);
 	printf("\tTotal Successful Purchases: %d\n", total_success);
-	printf("\tTotal Revenue: %.2f\n", total_revenue);
+	printf("\tTotal Revenue: %.2f EUR\n", total_revenue);
 
 	return 0;
 }

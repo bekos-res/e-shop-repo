@@ -9,7 +9,7 @@ Product catalog[PRODUCT_COUNT];	// Define the catalog array
 void initialise_catalog() {
 	for (int i = 0; i < PRODUCT_COUNT; i++) {
 		snprintf(catalog[i].description, sizeof(catalog[i].description), "Product %d", i + 1);
-		catalog[i].price = 10.0f + (rand() % 91);	// Random price between 10 and 100
+		catalog[i].price = 1.0f + ((rand() % 91) / 10.0);	// Random price between 1 and 10
 		catalog[i].item_count = 2;	// Default: 2 items in stock
 		catalog[i].attempt_count = 0;	// No attempts initially
 		catalog[i].sold_count = 0;	// No sails initially
