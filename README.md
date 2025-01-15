@@ -10,6 +10,8 @@ This project implements a simulated e-shop system to demonstrate **Inter-Process
      - A description
      - Price
      - Stock count (initially set to 2 units per product).
+     - Attempt count (for all attempts to buy it)
+     - Failed customer service list (to keep track of unserviced customers)
 
 2. **Customer Simulation**:
    - Up to 5 customers interact with the e-shop concurrently.
@@ -36,6 +38,7 @@ Defines the behavior of customer processes:
 - Simulates order requests with random product selections.
 - Sends order data to the e-shop and receives results.
 - Handles purchase success or failure notifications.
+- Collects customer results and produces customer report.
 
 ### 2. `eshop.c` / `eshop.h`
 Implements the e-shop logic:
@@ -63,5 +66,13 @@ Automates the build process:
 ### Steps
 1. Clone the repository:
    ```bash
-   git clone <repository_url>
-   cd <repository_directory>
+   git clone https://github.com/bekos-res/e-shop-repo.git
+2. Change directory into repository:
+   ```bash
+   cd e-shop-repo
+3. Make package
+   ```bash
+   make
+4. Execute programme
+   ```bash
+   ./eshop
